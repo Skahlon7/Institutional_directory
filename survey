@@ -1,0 +1,74 @@
+/* Institutional dataset of New York and New Jersey colleges/universities for years 1995-2015 detailing public Institutional characteristics
+
+Last modified by: Sandeep Kahlon
+Last modified on: 07.14.2021
+
+Notes: 
+
+*/
+
+// Insertion of local directory //
+clear all
+cd /users/sandeepk/Desktop/STATA_SK
+
+// Databases imported from Delta Public Release //
+use delta_public_release_00_15.dta
+
+use delta_public_release_87_99.dta
+
+// Databases appended to display observations in years 1995-2005//
+drop if academicyear < 1995
+
+append using delta_public_release_00_15.dta 
+
+// Value labels created for Institution sector for display purposes //
+label define con 0"Administrative Unit" 1"Public 4-year or above" 2"Private nonprofit 4-year or above" 3"Private for-profit 4-year or above" 4"Public 2-year" 5"Private nonprofit 2-year" 6"Private for-profit 2-year" 7"Public less-than-2-year" 8"Private nonprofit less-than-2-year" 9"Private for-profit less-than-2-year" 99"Sector Unknown (not active)" 
+label values sector_revised con
+
+// Dummy variables created to indicate respective academic years //
+tabulate academicyear, generate(dummy) 
+
+// Generation of categorical variable indicating respective Institution minority service, academic level, and control status //
+gen instcat = .
+
+replace instcat = 1 if hbcu==1 & iclevel==2 & control==1 | hsi==1 & iclevel==2 & control==1
+
+replace instcat = 2 if hbcu==1 & iclevel==4 & control==1 | hsi==1 & iclevel==4 & control==1
+
+replace instcat = 3 if hbcu==1 & iclevel==2 & control==2 | hsi==1 & iclevel==2 & control==2
+
+replace instcat = 4 if hbcu==1 & iclevel==4 & control==2 | hsi==1 & iclevel==4 & control==2
+
+replace instcat = 5 if hbcu==1 & iclevel==2 & control==3 | hsi==1 & iclevel==2 & control==3
+
+replace instcat = 6 if hbcu==1 & iclevel==4 & control==3 | hsi==1 & iclevel==4 & control==3
+
+replace instcat = 7 if hbcu==2 & iclevel==2 & control==1 | hsi==0 & iclevel==2 & control==1
+
+replace instcat = 8 if hbcu==2 & iclevel==4 & control==1 | hsi==0 & iclevel==4 & control==1
+
+replace instcat = 9 if hbcu==2 & iclevel==2 & control==2 | hsi==0 & iclevel==2 & control==2
+
+replace instcat = 10 if hbcu==2 & iclevel==4 & control==2 | hsi==0 & iclevel==4 & control==2
+
+replace instcat = 11 if hbcu==2 & iclevel==2 & control==3 | hsi==0 & iclevel==2 & control==3
+
+replace instcat = 12 if hbcu==2 & iclevel==4 & control==3 | hsi==0 & iclevel==4 & control==3
+
+* Categorical Variable provided corresponding value labels * 
+label define college_characteristics 1"MSI, 2-year, Public" 2"MSI, 4-year, Public" 3"MSI, 2-year, Private nonprofit" 4"MSI, 4-year, Private nonprofit" 5"MSI, 2-year, Private for-profit" 6"MSI, 4-year, Private for-profit" 7"Non MSI, 2-year, Public" 8"Non MSI, 4-year, Public" 9"Non MSI, 2-year, Private nonprofit" 10"Non MSI, 4-year, Private nonprofit" 11"Non MSI, 2-year, Private for-profit" 12"Non MSI, 4-year, Private for-profit"
+
+label values instcat college_characteristics
+
+// Dataset limited to 10 Instiutional variables //
+keep instcat academicyear groupid unitid instname sector_revised hbcu hsi city state
+
+// Dataset limited to ordered New York and New Jersey Institutional data //
+ren state _state
+encode _state, gen(state)
+drop _state
+keep if (state ==37 | state==40)
+sort state academicyear
+
+// Variables categorized in alphabetic order //
+order _all, alphabetic 
